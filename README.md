@@ -1,4 +1,16 @@
 # Nethercore
+Add to composer.json:
+
+```
+"repositories": [
+    {
+        "type": "vcs",
+        "url": "https://github.com/Netherspike/Nethercore"
+    }
+]
+```
+
+
 composer require nethercore/csv-exporter
 
 php artisan make:export {name} {model}
