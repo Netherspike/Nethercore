@@ -1,19 +1,8 @@
 # Nethercore - Laravel CSV Data Export & Creator
 
-Installation:
+Installation via composer:
 
-1. Add to composer.json:
-
-```
-"repositories": [
-    {
-        "type": "vcs",
-        "url": "https://github.com/Netherspike/Nethercore"
-    }
-]
-```
-
-2. install package `composer require nethercore/csv-exporter`
+`composer require nethercore/csv-exporter`
 ________________________________________________________________________
 
 Usage:
