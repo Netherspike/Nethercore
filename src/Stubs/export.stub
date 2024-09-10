@@ -1,0 +1,48 @@
+<?php
+
+declare(strict_types= 1);
+
+namespace {{NAMESPACE}};
+
+use App\Models\{{MODEL}};
+use Nethercore\CsvExporter\Interfaces\BaseExporterInterface;
+use Nethercore\CsvExporter\Traits\StreamResponseTrait;
+use Symfony\Component\HttpFoundation\StreamedResponse;
+
+final class {{CLASS_NAME}}Export implements BaseExporterInterface
+{
+    use StreamResponseTrait;
+
+    protected array $export_arr = [];
+
+    public function __construct(
+        private readonly ?string $search_term = null
+    ) {
+        $this->generateExportData();
+    }
+
+    public function generateExportData(): self
+    {
+        $field_arr = ['col_1', 'col_2'];
+
+        $query = {{MODEL}}::query()->select($field_arr);
+
+        //Translate heading into local language
+        $this->export_arr = [
+            [
+                trans('heading 1'),
+                trans('heading 2')
+            ],
+            ...$query->get()->pluck($field_arr)->toArray()
+        ];
+        return $this;
+    }
+
+    public function export(): StreamedResponse
+    {
+        return $this->downloadCsv(
+            data: $this->export_arr,
+            filename: '{{MODEL}}s.csv'
+        );
+    }
+}
