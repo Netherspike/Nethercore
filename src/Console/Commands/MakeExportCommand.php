@@ -10,10 +10,10 @@ use Illuminate\Support\Pluralizer;
 
 class MakeExportCommand extends Command
 {
+    protected const STUB_PATH = __DIR__ . '../../../Stubs/export.stub';
+
     protected $signature = 'make:export {name} {model}';
-
     protected $description = 'Make a new export class';
-
     protected Filesystem $files;
 
     public function __construct(Filesystem $files)
@@ -22,119 +22,73 @@ class MakeExportCommand extends Command
         $this->files = $files;
     }
 
-    /**
-     * Execute console command and create exporter class from stub
-     * @return void
-     */
     public function handle(): void
     {
         $path = $this->getSourceFilePath();
+        $this->createDirectoryIfNotExists($path);
 
-        $this->makeDirectory(dirname($path));
+        $contents = $this->generateStubContents();
+        $this->createFile($path, $contents);
+    }
 
-        $contents = $this->getSourceFile();
+    private function getSingularClassName(string $name): string
+    {
+        return ucwords(Pluralizer::singular($name));
+    }
 
+    private function getStubPath(): string
+    {
+        return self::STUB_PATH;
+    }
+
+    private function getStubVariables(): array
+    {
+        return [
+            'NAMESPACE' => 'App\\Exports',
+            'CLASS_NAME' => $this->getSingularClassName($this->argument('name')),
+            'MODEL' => $this->getSingularClassName($this->argument('model'))
+        ];
+    }
+
+    private function generateStubContents(): string
+    {
+        return $this->replacePlaceholders(
+            $this->getStubPath(),
+            $this->getStubVariables()
+        );
+    }
+
+    private function replacePlaceholders(string $stubFilePath, array $placeholderValues = []): string
+    {
+        $contents = file_get_contents($stubFilePath);
+
+        foreach ($placeholderValues as $placeholder => $value) {
+            $search = '{{' . $placeholder . '}}';
+            $contents = str_replace($search, $value, $contents);
+        }
+
+        return $contents;
+    }
+
+    private function getSourceFilePath(): string
+    {
+        return base_path('app/Exports/') . $this->getSingularClassName($this->argument('name')) . 'Export.php';
+    }
+
+    private function createDirectoryIfNotExists(string $path): void
+    {
+        if (!$this->files->isDirectory($path)) {
+            $this->files->makeDirectory(dirname($path), 0777, true, true);
+        }
+    }
+
+    private function createFile(string $path, string $contents): void
+    {
         if (!$this->files->exists($path)) {
             $this->files->put($path, $contents);
             $this->info($path . ' successfully created.');
         } else {
             $this->error($path . ' already exists.');
         }
-    }
-
-    /**
-     * Return the Singular Capitalize Name
-     * @param $name
-     * @return string
-     */
-    public function getSingularClassName($name): string
-    {
-        return ucwords(Pluralizer::singular($name));
-    }
-
-    /**
-     * Return the stub file path
-     * @return string
-     *
-     */
-    public function getStubPath(): string
-    {
-        return __DIR__.'../../../Stubs/export.stub';
-    }
-
-    /**
-     **
-     * Map the stub variables present in stub to its value
-     *
-     * @return array
-     *
-     */
-    public function getStubVariables(): array
-    {
-        return [
-            'NAMESPACE'     => 'App\\Exports',
-            'CLASS_NAME'    => $this->getSingularClassName($this->argument('name')),
-            'MODEL'         => $this->getSingularClassName($this->argument('model')),
-        ];
-    }
-
-    /**
-     * Get the stub path and the stub variables
-     *
-     * @return string|array|bool
-     *
-     */
-    public function getSourceFile(): string|array|bool
-    {
-        return $this->getStubContents(
-            $this->getStubPath(),
-            $this->getStubVariables()
-        );
-    }
-
-    /**
-     * Replace the stub variables(key) with the desire value
-     *
-     * @param string $stub
-     * @param array $stubVariables
-     * @return string|array|bool
-     */
-    public function getStubContents(string $stub , array $stubVariables = []): string|array|bool
-    {
-        //TODO: refactor with regex as it might be faster
-        $contents = file_get_contents($stub);
-
-        foreach ($stubVariables as $search => $replace)
-        {
-            $contents = str_replace('{{'.$search.'}}' , $replace, $contents);
-        }
-
-        return $contents;
-
-    }
-
-    /**
-     * Get the full path of generate class
-     *
-     * @return string
-     */
-    public function getSourceFilePath(): string
-    {
-        return base_path('app/Exports/') .$this->getSingularClassName($this->argument('name')) .'Export.php';
-    }
-
-    /**
-     * Build the directory for the class if necessary.
-     *
-     * @param string $path
-     * @return string
-     */
-    protected function makeDirectory(string $path): string
-    {
-        if (!$this->files->isDirectory($path)) {
-            $this->files->makeDirectory($path, 0777, true, true);
-        }
-
-        return $path;
     }
 }
