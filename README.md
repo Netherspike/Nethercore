@@ -1,5 +1,8 @@
-# Nethercore
-Add to composer.json:
+# Nethercore - Laravel CSV Data Export & Creator
+
+Installation:
+
+1. Add to composer.json:
 
 ```
 "repositories": [
@@ -10,12 +13,16 @@ Add to composer.json:
 ]
 ```
 
+2. install package `composer require nethercore/csv-exporter`
+________________________________________________________________________
 
-composer require nethercore/csv-exporter
+Usage:
 
-php artisan make:export {name} {model}
+Generated files will appear in App/Exports/{name}Exort.php
 
-Example Usage:
+`php artisan make:export {name} {model}`
+
+Example Code:
 
 ```
 <?php
